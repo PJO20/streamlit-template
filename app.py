@@ -8,86 +8,153 @@ import seaborn as sns
 # Configuration de la page Streamlit
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Projet Machine Learning - EDA & Déploiement",
+    page_title="Spaceship Titanic - ML",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+ 
+# Styles CSS personnalisés
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+ 
+    html, body, [class*="css"] {
+        font-family: 'Syne', sans-serif;
+    }
+    h1, h2, h3 {
+        font-family: 'Space Mono', monospace !important;
+    }
+    .main {
+        background-color: #0d0f1a;
+        color: #e0e6f0;
+    }
+    .stApp {
+        background: linear-gradient(135deg, #0d0f1a 0%, #131629 60%, #0d1a2a 100%);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #1a1f3a, #0f1628);
+        border: 1px solid #2a3560;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(59,130,246,0.1);
+    }
+    .section-header {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-family: 'Space Mono', monospace;
+    }
+    div[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f1628 0%, #131a2e 100%);
+        border-right: 1px solid #2a3560;
+    }
+    .stRadio > label {
+        color: #94a3b8 !important;
+    }
+    .result-box {
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px 0;
+        border: 1px solid;
+    }
+    .transported-true {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: #10b981;
+        color: #34d399;
+    }
+    .transported-false {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: #ef4444;
+        color: #f87171;
+    }
+</style>
+""", unsafe_allow_html=True)
+ 
 # -----------------------------------------------------------------------------
 # Fonctions de chargement des données et du modèle (à compléter par les étudiants)
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_data():
-    """
-    Fonction pour charger le dataset.
-    Remplacez le code ci-dessous par la lecture de votre fichier de données Kaggle.
-    Exemple: return pd.read_csv("data/raw/votre_fichier.csv")
-    """
-    # Données simulées pour l'exemple
-    np.random.seed(42)
-    df = pd.DataFrame({
-        "Feature_1": np.random.randn(500),
-        "Feature_2": np.random.rand(500) * 100,
-        "Feature_3": np.random.randint(1, 5, 500),
-        "Target": np.random.choice([0, 1], 500)
-    })
-    return df
+    
+    train_df = pd.read_csv("train.csv")
+    test_df  = pd.read_csv("test.csv")
+    return train_df, test_df
 
-@st.cache_resource
-def load_model():
-    """
-    Fonction permettant de charger votre modèle pré-entraîné (ex: RandomForest).
-    Exemple avec joblib :
-    return joblib.load('models/mon_modele.pkl')
-    """
-    class DummyModel:
-        def predict(self, X):
-            return np.random.choice([0, 1], size=len(X))
-        
-        def predict_proba(self, X):
-            proba = np.random.rand(len(X), 2)
-            proba = proba / proba.sum(axis=1, keepdims=True)
-            return proba
-
-    return DummyModel()
-
-# Chargement initial
-try:
-    df = load_data()
-    model = load_model()
-    data_loaded = True
-except Exception as e:
-    st.error(f"Erreur lors du chargement des données ou du modèle : {e}")
-    data_loaded = False
 
 # -----------------------------------------------------------------------------
 # Menu de Navigation (Sidebar)
 # -----------------------------------------------------------------------------
-st.sidebar.title("Navigation")
-menu = ["🏠 Accueil", "📊 Analyse Exploratoire (EDA)", "🤖 Test du Modèle", "💡 Conclusions & Perspectives"]
-choice = st.sidebar.radio("Sommaire :", menu)
-
+st.sidebar.markdown("## 🚀 Spaceship Titanic")
+st.sidebar.markdown("**Orsini Pierre-Jean**")
 st.sidebar.markdown("---")
-
-# Ajouter des fonctionnalités supplémentaires dans la sidebar (ex: filtres globaux)
+ 
+menu = [
+    "🏠 Accueil",
+    "📊 Analyse Exploratoire (EDA)",
+    "🤖 Test du Modèle",
+    "📈 Performances du Modèle",
+    "💡 Conclusions & Perspectives"
+]
+choice = st.sidebar.radio("Navigation :", menu)
+ 
+st.sidebar.markdown("---")
+ 
 if choice == "📊 Analyse Exploratoire (EDA)" and data_loaded:
-    st.sidebar.subheader("Filtres Globaux")
-    target_filter = st.sidebar.multiselect("Filtrer par Target :", options=df["Target"].unique(), default=df["Target"].unique())
-    # Filtrer le dataframe
-    df = df[df["Target"].isin(target_filter)]
-
+    st.sidebar.subheader("Filtres")
+    planet_filter = st.sidebar.multiselect(
+        "Planète d'origine :",
+        options=df_eda['HomePlanet'].dropna().unique(),
+        default=df_eda['HomePlanet'].dropna().unique()
+    )
+    transported_filter = st.sidebar.multiselect(
+        "Transporté :",
+        options=[True, False],
+        default=[True, False]
+    )
+    df_eda = df_eda[
+        df_eda['HomePlanet'].isin(planet_filter) &
+        df_eda['Transported'].isin(transported_filter)
+    ]
+ 
 st.sidebar.markdown("---")
-st.sidebar.info("Template d'application Streamlit développé pour le projet Aflokkat.")
+st.sidebar.info("Projet ML – Kaggle Spaceship Titanic\nRandom Forest Classifier")
+ 
+# Palette cohérente
+PALETTE  = {"True": "#3b82f6", "False": "#f59e0b"}
+BLUE     = "#3b82f6"
+ORANGE   = "#f59e0b"
+BG_PLOT  = "#131629"
+TEXT_COL = "#e0e6f0"
+ 
+def style_fig(fig, ax_or_axes=None):
+    """Applique un style sombre cohérent."""
+    fig.patch.set_facecolor(BG_PLOT)
+    axes = ax_or_axes if ax_or_axes is not None else fig.get_axes()
+    if not isinstance(axes, list):
+        axes = [axes]
+    for ax in axes:
+        ax.set_facecolor(BG_PLOT)
+        ax.tick_params(colors=TEXT_COL)
+        ax.xaxis.label.set_color(TEXT_COL)
+        ax.yaxis.label.set_color(TEXT_COL)
+        ax.title.set_color(TEXT_COL)
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#2a3560')
+    return fig
 
 # =============================================================================
 # Section 1 : Accueil
 # =============================================================================
 if choice == "🏠 Accueil":
-    st.title("Projet Machine Learning : De l'Analyse au Déploiement 🎓")
-    
+    st.markdown("<h1 class='section-header'>🚀 Spaceship Titanic</h1>", unsafe_allow_html=True)
+    st.markdown("### Prédire qui sera téléporté dans une dimension parallèle")
+ 
     st.markdown("""
-    Cette application Streamlit est un template robuste conçu pour présenter les résultats de votre modèle de Machine Learning basé sur un dataset (ex: Kaggle).
+    L'année 2912 : le vaisseau spatial **Titanic** entre en collision avec une anomalie spatio-temporelle.
+    Des passagers ont été **téléportés dans une dimension alternative**.  
+    L'objectif est de prédire, à partir des données de bord, **quels passagers ont été transportés**.
     """)
     
     # Utilisation de st.expander pour cacher/afficher l'information détaillée
@@ -249,4 +316,7 @@ elif choice == "💡 Conclusions & Perspectives":
 # Footer
 # -----------------------------------------------------------------------------
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: grey;'>Projet Streamlit Template par Baptiste Audroin | Aflokkat</p>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center;color:#4a5580;font-family:Space Mono,monospace;font-size:12px'>"
+    "Spaceship Titanic – Orsini Pierre-Jean | Aflokkat | Random Forest Classifier</p>",
+    unsafe_allow_html=True
